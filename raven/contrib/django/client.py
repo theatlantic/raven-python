@@ -16,6 +16,8 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
+from django.utils.datastructures import MultiValueDict
+from django.utils import six
 
 try:
     # support Django 1.9
@@ -202,6 +204,15 @@ class DjangoClient(Client):
                         data = request.POST or '<unavailable>'
                     except Exception:
                         data = '<unavailable>'
+                    else:
+                        def list_or_item(o):
+                            if isinstance(o, (list, tuple)) and len(o) == 1:
+                                return o[0]
+                            else:
+                                return o
+                        if isinstance(data, MultiValueDict):
+                            data = dict([
+                                (k, list_or_item(v)) for k, v in six.iterlists(data)])
         else:
             data = None
 
